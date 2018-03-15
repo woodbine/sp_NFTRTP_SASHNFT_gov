@@ -11,6 +11,8 @@ from bs4 import BeautifulSoup
 
 #### FUNCTIONS 1.2
 import requests       # import requests for validating urls
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def validateFilename(filename):
     filenameregex = '^[a-zA-Z0-9]+_[a-zA-Z0-9]+_[a-zA-Z0-9]+_[0-9][0-9][0-9][0-9]_[0-9QY][0-9]$'
@@ -38,12 +40,12 @@ def validateFilename(filename):
 
 def validateURL(url):
     try:
-        r = requests.get(url, allow_redirects=True, timeout=20)
+        r = requests.get(url, allow_redirects=True, timeout=20, verify=False)
         count = 1
         while r.status_code == 500 and count < 4:
             print ("Attempt {0} - Status code: {1}. Retrying.".format(count, r.status_code))
             count += 1
-            r = requests.get(url, allow_redirects=True, timeout=20)
+            r = requests.get(url, allow_redirects=True, timeout=20, verify=False)
         sourceFilename = r.headers.get('Content-Disposition')
         if sourceFilename:
             ext = os.path.splitext(sourceFilename)[1].replace('"', '').replace(';', '').replace(' ', '')
@@ -91,7 +93,7 @@ data = []
 
 #### READ HTML 1.2
 
-html = requests.get(url)
+html = requests.get(url, verify=False)
 soup = BeautifulSoup(html.text, 'lxml')
 
 
@@ -103,9 +105,8 @@ for block in blocks:
     for link in links:
         try:
             if '.csv' in link['href'] or '.xls' in link['href'] or '.xlsx' in link['href'] or '.pdf' in link['href']:
-
                 url = link['href']
-                title = link.text.strip().split('GL Expenditure')[-1].split(u'–')[-1].strip()
+                title = link.text.strip().split('xpenditure')[-1].split(u'–')[-1].strip()
                 csvMth = title[:3]
                 csvYr = title[-4:]
                 if 'r 15' in csvYr:
